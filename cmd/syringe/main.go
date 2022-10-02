@@ -63,7 +63,7 @@ func main() {
 			},
 			{
 				Name:   "update",
-				Usage:  "Update credentials for a service. Meant to be used inside service ExecStart",
+				Usage:  "Update credentials for a service. Meant to be used inside service ExecReload",
 				Action: updateEntrypoint,
 			},
 		},
