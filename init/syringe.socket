@@ -1,0 +1,8 @@
+[Socket]
+ListenStream=/run/syringe/syringe.sock
+SocketMode=0600
+SocketUser=root
+SocketGroup=root
+
+[Install]
+WantedBy=sockets.target

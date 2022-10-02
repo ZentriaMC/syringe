@@ -1,0 +1,13 @@
+[Unit]
+After=syringe.socket
+Requires=syringe.socket
+Wants=syringe.socket
+
+[Service]
+Type=dbus
+BusName=ee.zentria.syringe1.Syringe
+ExecStart=/usr/bin/syringe server
+
+[Install]
+WantedBy=multi-user.target
+Alias=dbus-ee.zentria.syringe.Syringe.service
