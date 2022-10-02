@@ -70,3 +70,14 @@ func SocketPaths(ctx context.Context) (v []string) {
 	v = ctx.Value(socketPath).([]string)
 	return
 }
+
+func WithGlobalDebug(gd bool) ContextValueFunc {
+	return func(ctx context.Context) context.Context {
+		return context.WithValue(ctx, globalDebug, gd)
+	}
+}
+
+func GlobalDebug(ctx context.Context) (v bool) {
+	v = ctx.Value(globalDebug).(bool)
+	return
+}
