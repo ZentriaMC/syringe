@@ -1,0 +1,5 @@
+[D-BUS Service]
+Name=ee.zentria.syringe1.Syringe
+User=root
+Exec=/bin/false
+SystemdService=dbus-ee.zentria.syringe1.Syringe.service

@@ -1,0 +1,6 @@
+package secret
+
+const (
+	MAX_CREDENTIAL_SIZE           = 1024 * 1024                      // #define CREDENTIAL_SIZE_MAX
+	MAX_CREDENTIAL_ENCRYPTED_SIZE = MAX_CREDENTIAL_SIZE * 128 * 1024 // #define CREDENTIAL_ENCRYPTED_SIZE_MAX
+)

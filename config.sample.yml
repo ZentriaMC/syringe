@@ -1,0 +1,24 @@
+---
+templates:
+  - unit: "secrets-test.service"
+    credential:
+      - "foobarbaz"
+    contents: >
+      Hello world -
+      unit='{{ unitname }}',
+      credential='{{ credentialname }}';
+      {{ time "rfc3339" "utc" }}
+
+  - unit: "secrets-test.service"
+    credential:
+      - "xyz"
+    options:
+      delim_left: "{%"
+      delim_right: "%}"
+      sandbox_path: "/etc"
+    contents: |
+      hostname={% file "/etc/hostname" %}
+
+  - unit: "secrets-test.service"
+    contents: |
+      {{ sockaddr "GetPublicIP" }}
