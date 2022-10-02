@@ -28,6 +28,14 @@ func main() {
 					"SYRINGE_DEBUG",
 				},
 			},
+			&cli.BoolFlag{
+				Name:  "debug-global",
+				Usage: "Whether to enable debug logging for all Syringe clients. Useful only when dbus is enabled",
+				Value: false,
+				EnvVars: []string{
+					"SYRINGE_DEBUG_GLOBAL",
+				},
+			},
 		},
 		Commands: []*cli.Command{
 			{
@@ -68,7 +76,7 @@ func main() {
 			},
 		},
 		Before: func(cctx *cli.Context) (err error) {
-			if err = setupLogging(cctx.Bool("debug")); err != nil {
+			if err = setupLogging(cctx.Bool("debug") || cctx.Bool("debug-global")); err != nil {
 				return
 			}
 
