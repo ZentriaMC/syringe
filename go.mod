@@ -12,7 +12,7 @@ require (
 	github.com/urfave/cli/v2 v2.17.1
 	go.uber.org/multierr v1.8.0
 	go.uber.org/zap v1.23.0
-	golang.org/x/sys v0.0.0-20220928140112-f11e5e49a4ec
+	golang.org/x/sys v0.0.0-20221013171732-95e765b1cc43
 	gopkg.in/yaml.v3 v3.0.1
 )
 
