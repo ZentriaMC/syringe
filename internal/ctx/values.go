@@ -8,4 +8,5 @@ var (
 	credentialReqUnit contextValue = "ctx:cru"
 	credentialReqCred contextValue = "ctx:crc"
 	socketPath        contextValue = "ctx:sp"
+	globalDebug       contextValue = "ctx:gd"
 )

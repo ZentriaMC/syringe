@@ -90,6 +90,7 @@ func serverEntrypoint(clictx *cli.Context) (err error) {
 		cctx.WithVaultClient(vault),
 		cctx.WithTemplateMap(tm),
 		cctx.WithSocketPaths(socketPaths),
+		cctx.WithGlobalDebug(clictx.Bool("debug-global")),
 	)
 
 	if clictx.Bool("dbus") {

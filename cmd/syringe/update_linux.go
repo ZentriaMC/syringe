@@ -28,6 +28,17 @@ func updateEntrypoint(clictx *cli.Context) (err error) {
 	runtime.GOMAXPROCS(1)
 	ctx := clictx.Context
 
+	// Reconfigure logger according to debug value via dbus service
+	// We need dbus service to be available in update mode anyway
+	if debug, derr := dbus.GetGlobalDebug(ctx); derr != nil {
+		zap.L().Debug("unable to get global debug flag", zap.Error(err))
+	} if debug && !(clictx.Bool("debug") || clictx.Bool("global-debug")) {
+		if err = setupLogging(true); err != nil {
+			return
+		}
+		zap.L().Debug("global debugging enabled")
+	}
+
 	if os.Getuid() != 0 && os.Geteuid() != 0 {
 		zap.L().Error("effective uid is not 0, very likely unable to update credentials", zap.Int("uid", os.Getuid()), zap.Int("euid", os.Geteuid()))
 	}
