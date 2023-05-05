@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"syscall"
+	"time"
 
 	"github.com/coreos/go-systemd/v22/activation"
 	vaultapi "github.com/hashicorp/vault/api"
@@ -108,6 +109,11 @@ func serverEntrypoint(clictx *cli.Context) (err error) {
 					zap.L().Warn("failed to accept connection", zap.Error(err))
 					continue
 				}
+
+				if err := client.SetDeadline(time.Now().Add(15 * time.Second)); err != nil {
+					zap.L().Warn("failed to set client rw deadline", zap.Error(err))
+				}
+
 				go serve(ctx, client)
 			}
 		}(listener, socketPath)
