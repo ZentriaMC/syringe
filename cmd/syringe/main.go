@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"os/signal"
+	"runtime"
 
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
@@ -54,7 +55,7 @@ func main() {
 					&cli.BoolFlag{
 						Name:  "dbus",
 						Usage: "Whether to enable dbus support",
-						Value: true,
+						Value: runtime.GOOS == "linux",
 						EnvVars: []string{
 							"SYRINGE_SERVER_DBUS",
 						},
