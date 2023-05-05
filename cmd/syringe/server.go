@@ -157,7 +157,7 @@ func filterUnixListeners(listeners []net.Listener) (unixListeners []*net.UnixLis
 func serve(ctx context.Context, client *net.UnixConn) {
 	defer client.Close()
 
-	req, peer, err := parseRequest(client)
+	req, peer, err := parseRequest(ctx, client)
 	if err != nil {
 		zap.L().Error("failed to process credential request", zap.Error(err))
 		return

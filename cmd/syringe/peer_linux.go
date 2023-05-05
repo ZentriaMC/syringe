@@ -16,7 +16,7 @@ import (
 
 type PeerCredential = syscall.Ucred
 
-func parseRequest(client *net.UnixConn) (req request.CredentialRequest, peer PeerCredential, err error) {
+func parseRequest(ctx context.Context, client *net.UnixConn) (req request.CredentialRequest, peer PeerCredential, err error) {
 	var f *os.File
 	f, err = client.File()
 	if err != nil {
@@ -55,7 +55,7 @@ func parseRequest(client *net.UnixConn) (req request.CredentialRequest, peer Pee
 	peer.Uid = cred.Uid
 	peer.Gid = cred.Gid
 
-	name, _, _, err := dbus.GetServiceByPID(context.TODO(), int(cred.Pid))
+	name, _, _, err := dbus.GetServiceByPID(ctx, int(cred.Pid))
 	if err != nil {
 		err = fmt.Errorf("failed to get service name by pid %d: %w", cred.Pid, err)
 		return
