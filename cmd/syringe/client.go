@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/binary"
 	"fmt"
 	"io"
 	"net"
@@ -37,6 +38,17 @@ func requestCredential(socket string, cr request.CredentialRequest, out io.Write
 	}
 
 	defer func() { _ = conn.Close() }()
+
+	if runtime.GOOS != "linux" {
+		if _, err = conn.Write(binary.BigEndian.AppendUint32(nil, uint32(len(request)))); err != nil {
+			err = fmt.Errorf("failed to write credential request: %w", err)
+			return
+		}
+		if _, err = conn.Write(request); err != nil {
+			err = fmt.Errorf("failed to write credential request: %w", err)
+			return
+		}
+	}
 
 	if n, err = io.Copy(out, io.LimitReader(conn, secret.MAX_CREDENTIAL_SIZE)); err != nil {
 		err = fmt.Errorf("failed to read credential request response: %w", err)
