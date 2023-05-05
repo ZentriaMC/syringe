@@ -22,6 +22,10 @@ import (
 	"github.com/ZentriaMC/syringe/internal/secret"
 )
 
+const (
+	CredentialsDir = "/run/credentials"
+)
+
 func updateEntrypoint(clictx *cli.Context) (err error) {
 	runtime.GOMAXPROCS(1)
 	ctx := clictx.Context
@@ -40,7 +44,7 @@ func updateEntrypoint(clictx *cli.Context) (err error) {
 	// Do namespace jumping, because ExecReload does not allow access to credentials
 	// self -> unshare -> change ns -> unshare again to not affect real service ns
 	err = withMountNSOf(mainPID, func() (err error) {
-		credsPath := filepath.Join("/run/credentials", unitName)
+		credsPath := filepath.Join(CredentialsDir, unitName)
 		if _, err = os.Stat(credsPath); os.IsNotExist(err) {
 			err = fmt.Errorf("credentials path '%s' does not exist: %w", credsPath, err)
 			return
