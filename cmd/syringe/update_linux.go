@@ -6,7 +6,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"net"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -19,7 +18,6 @@ import (
 
 	"github.com/ZentriaMC/syringe/internal/dbus"
 	"github.com/ZentriaMC/syringe/internal/request"
-	"github.com/ZentriaMC/syringe/internal/secret"
 )
 
 const (
