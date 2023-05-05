@@ -11,7 +11,7 @@ buildGoModule rec {
 
   src = lib.cleanSource ./.;
 
-  vendorHash = "sha256-H5fc5RD4d22BhRtr1wZmFcObXsri3T1ttYQLCRX4080=";
+  vendorHash = "sha256-BYa1t6NwtjiHdAqGQdSX15D1FnSLaI7bv78S6F8G/NM=";
   subPackages = [ "cmd/syringe" ];
   ldflags = [
     "-s"
