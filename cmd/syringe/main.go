@@ -63,6 +63,28 @@ func main() {
 				},
 			},
 			{
+				Name:   "request",
+				Usage:  "Request a credential manually",
+				Action: manualRequestEntrypoint,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "socket",
+						Usage: "Syringe socket path",
+						Value: "/tmp/syringe.sock",
+					},
+					&cli.StringFlag{
+						Name:     "unit",
+						Usage:    "Unit name to request credential for",
+						Required: true,
+					},
+					&cli.StringFlag{
+						Name:     "credential",
+						Usage:    "Credential name to request",
+						Required: true,
+					},
+				},
+			},
+			{
 				Name:   "update",
 				Usage:  "Update credentials for a service. Meant to be used inside service ExecReload",
 				Action: updateEntrypoint,
