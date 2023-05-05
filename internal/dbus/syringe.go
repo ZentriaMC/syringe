@@ -33,3 +33,24 @@ func GetServiceSocketPaths(ctx context.Context) (socketPaths map[string]bool, er
 
 	return
 }
+
+func GetGlobalDebug(ctx context.Context) (debug bool, err error) {
+	var conn *dbus.Conn
+
+	if conn, err = dbus.ConnectSystemBus(); err != nil {
+		err = fmt.Errorf("failed to establish dbus connection: %w", err)
+		return
+	}
+	defer conn.Close()
+
+	var globalDebugValue dbus.Variant
+	obj := conn.Object(intf, objPath)
+	err = obj.CallWithContext(ctx, "ee.zentria.syringe1.Syringe.GetGlobalDebug", 0).Store(&globalDebugValue)
+	if err != nil {
+		err = fmt.Errorf("failed to call GetGlobalDebug: %w", err)
+		return
+	}
+
+	debug = globalDebugValue.Value().(bool)
+	return
+}
