@@ -30,6 +30,7 @@
     } // flake-utils.lib.eachSystem supportedSystems (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
+        inherit (pkgs) lib stdenv;
       in
       rec {
         packages.default = packages.syringe;
@@ -42,6 +43,9 @@
             pkgs.go
             pkgs.golangci-lint
             pkgs.gopls
+          ] ++ lib.optionals stdenv.isDarwin [
+            pkgs.podman
+            pkgs.qemu
           ];
         };
       });
