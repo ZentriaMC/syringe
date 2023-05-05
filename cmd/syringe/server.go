@@ -58,6 +58,7 @@ func serverEntrypoint(clictx *cli.Context) (err error) {
 		}
 
 		server.SetUnlinkOnClose(true)
+		defer func() { _ = server.Close() }()
 
 		unixListeners = append(unixListeners, server)
 		socketPaths = append(socketPaths, socketPath)
