@@ -9,6 +9,7 @@ flags=(
 	-v "${root}/init/syringe.socket:/etc/systemd/system/syringe.socket:ro"
 	-v "${root}/dbus/ee.zentria.syringe1.Syringe.conf:/usr/share/dbus-1/system.d/ee.zentria.syringe1.Syringe.conf:ro"
 	-v "${root}/dbus/ee.zentria.syringe1.Syringe.service:/usr/share/dbus-1/system-services/ee.zentria.syringe1.Syringe.service:ro"
+	-v "${root}/hack/podman/debug.conf:/etc/systemd/system/syringe.service.d/debug.conf:ro"
 	-v "${root}/hack/podman/entrypoint.sh:/entrypoint.sh:ro"
 )
 
