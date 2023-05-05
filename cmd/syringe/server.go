@@ -107,6 +107,11 @@ func serverEntrypoint(clictx *cli.Context) (err error) {
 			for {
 				client, err := server.AcceptUnix()
 				if err != nil {
+					// Don't care if context is cancelled
+					if ctx.Err() != nil {
+						return
+					}
+
 					zap.L().Warn("failed to accept connection", zap.Error(err))
 					continue
 				}
