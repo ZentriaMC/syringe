@@ -23,6 +23,11 @@ const intro = introspect.IntrospectDeclarationString + `
                 <doc:doc><doc:summary>Path to the Unix sockets where Syringe is currently listening on</doc:summary></doc:doc>
             </arg>
         </method>
+        <method name="Reload">
+        	<arg direction="out" type="s">
+         		<doc:doc><doc:summary>Reload</doc:summary></doc:doc>
+         	</arg>
+        </method>
     </interface>
     ` + introspect.IntrospectDataString + `
 </node>
@@ -36,6 +41,10 @@ type syringeService struct {
 
 func (s *syringeService) GetSocketPaths() (v []string, err *dbus.Error) {
 	v = cctx.SocketPaths(s.ctx)
+	return
+}
+
+func (s *syringeService) Reload() (result string, err *dbus.Error) {
 	return
 }
 
