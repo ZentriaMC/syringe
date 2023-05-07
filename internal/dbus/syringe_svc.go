@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
+	"syscall"
 
 	"github.com/godbus/dbus/v5"
 	"github.com/godbus/dbus/v5/introspect"
@@ -23,6 +25,9 @@ const intro = introspect.IntrospectDeclarationString + `
                 <doc:doc><doc:summary>Path to the Unix sockets where Syringe is currently listening on</doc:summary></doc:doc>
             </arg>
         </method>
+        <method name="Reload">
+            <doc:doc><doc:description>Reload syringe configuration by sending SIGHUP to self</doc:description></doc:doc>
+        </method>
     </interface>
     ` + introspect.IntrospectDataString + `
 </node>
@@ -37,6 +42,13 @@ type syringeService struct {
 func (s *syringeService) GetSocketPaths() (v []string, err *dbus.Error) {
 	v = cctx.SocketPaths(s.ctx)
 	return
+}
+
+func (s *syringeService) Reload() *dbus.Error {
+	if err := syscall.Kill(os.Getpid(), syscall.SIGHUP); err != nil {
+		return dbus.NewError("failed to signal self", []interface{}{err.Error()})
+	}
+	return nil
 }
 
 func RegisterSyringeService(ctx context.Context) (err error) {
