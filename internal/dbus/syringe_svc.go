@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
+	"syscall"
 
 	"github.com/godbus/dbus/v5"
 	"github.com/godbus/dbus/v5/introspect"
@@ -45,6 +47,9 @@ func (s *syringeService) GetSocketPaths() (v []string, err *dbus.Error) {
 }
 
 func (s *syringeService) Reload() (result string, err *dbus.Error) {
+	if serr := syscall.Kill(os.Getpid(), syscall.SIGHUP); serr != nil {
+		err = dbus.NewError("failed to signal self", []interface{}{serr.Error()})
+	}
 	return
 }
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"runtime"
 	"syscall"
@@ -28,6 +29,10 @@ func serverEntrypoint(clictx *cli.Context) (err error) {
 		err = fmt.Errorf("failed to drop permissions: %w", err)
 		return
 	}
+
+	// Listen for SIGHUP for configuration reloading
+	sighupCh := make(chan os.Signal, 1)
+	signal.Notify(sighupCh, syscall.SIGHUP)
 
 	var socketPaths []string
 	var unixListeners []*net.UnixListener
@@ -125,7 +130,17 @@ func serverEntrypoint(clictx *cli.Context) (err error) {
 		}(listener, socketPath)
 	}
 
-	<-ctx.Done()
+loop:
+	for {
+		select {
+		case <-ctx.Done():
+			break loop
+		case <-sighupCh:
+			zap.L().Info("got signal to reload configuration")
+			// TODO: reload
+		}
+	}
+
 	return
 }
 
