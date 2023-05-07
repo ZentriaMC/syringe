@@ -23,6 +23,16 @@ import (
 	"github.com/ZentriaMC/syringe/internal/templatemap"
 )
 
+func loadConfig(configFile string, tm *templatemap.TemplateMap) (err error) {
+	var cfg *config.Config
+	if cfg, err = config.LoadConfig(configFile); err != nil {
+		err = fmt.Errorf("unable to load configuration from '%s': %w", configFile, err)
+		return
+	}
+
+	return tm.Populate(cfg)
+}
+
 func serverEntrypoint(clictx *cli.Context) (err error) {
 	// Drop possible elevated permissions
 	if err = dropPermissions(); err != nil {
@@ -70,15 +80,8 @@ func serverEntrypoint(clictx *cli.Context) (err error) {
 	}
 
 	// Load credential templates
-	configFile := clictx.Path("config")
-	var cfg *config.Config
-	if cfg, err = config.LoadConfig(configFile); err != nil {
-		err = fmt.Errorf("unable to load configuration from '%s': %w", configFile, err)
-		return
-	}
-
 	tm := templatemap.NewTemplateMap()
-	if err = tm.Populate(cfg); err != nil {
+	if err = loadConfig(clictx.Path("config"), tm); err != nil {
 		return
 	}
 
@@ -137,7 +140,11 @@ loop:
 			break loop
 		case <-sighupCh:
 			zap.L().Info("got signal to reload configuration")
-			// TODO: reload
+			if lerr := loadConfig(clictx.Path("config"), tm); lerr != nil {
+				zap.L().Error("failed to reload configuration", zap.Error(err))
+				continue
+			}
+			zap.L().Info("configuration reloaded")
 		}
 	}
 
