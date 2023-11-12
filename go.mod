@@ -7,7 +7,7 @@ require (
 	github.com/coreos/go-systemd/v22 v22.5.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/godbus/dbus/v5 v5.1.0
-	github.com/hashicorp/go-sockaddr v1.0.2
+	github.com/hashicorp/go-sockaddr v1.0.6
 	github.com/hashicorp/vault/api v1.9.1
 	github.com/urfave/cli/v2 v2.25.3
 	go.uber.org/multierr v1.11.0
