@@ -6,13 +6,13 @@ require (
 	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/coreos/go-systemd/v22 v22.5.0
 	github.com/davecgh/go-spew v1.1.1
-	github.com/godbus/dbus/v5 v5.1.0
+	github.com/godbus/dbus/v5 v5.2.2
 	github.com/hashicorp/go-sockaddr v1.0.2
 	github.com/hashicorp/vault/api v1.9.1
 	github.com/urfave/cli/v2 v2.25.3
 	go.uber.org/multierr v1.11.0
 	go.uber.org/zap v1.24.0
-	golang.org/x/sys v0.8.0
+	golang.org/x/sys v0.27.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
