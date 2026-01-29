@@ -1,10 +1,10 @@
 module github.com/ZentriaMC/syringe
 
-go 1.20
+go 1.23
 
 require (
 	github.com/Masterminds/sprig/v3 v3.2.3
-	github.com/coreos/go-systemd/v22 v22.5.0
+	github.com/coreos/go-systemd/v22 v22.7.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/godbus/dbus/v5 v5.1.0
 	github.com/hashicorp/go-sockaddr v1.0.2
