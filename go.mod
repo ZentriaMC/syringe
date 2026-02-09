@@ -1,6 +1,6 @@
 module github.com/ZentriaMC/syringe
 
-go 1.20
+go 1.24.0
 
 require (
 	github.com/Masterminds/sprig/v3 v3.2.3
@@ -12,7 +12,7 @@ require (
 	github.com/urfave/cli/v2 v2.25.3
 	go.uber.org/multierr v1.11.0
 	go.uber.org/zap v1.24.0
-	golang.org/x/sys v0.8.0
+	golang.org/x/sys v0.41.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
