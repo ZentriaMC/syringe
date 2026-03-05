@@ -12,7 +12,7 @@ import (
 
 	"github.com/coreos/go-systemd/v22/activation"
 	vaultapi "github.com/hashicorp/vault/api"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 	"go.uber.org/zap"
 
 	"github.com/ZentriaMC/syringe/internal/config"
@@ -22,7 +22,7 @@ import (
 	"github.com/ZentriaMC/syringe/internal/templatemap"
 )
 
-func serverEntrypoint(clictx *cli.Context) (err error) {
+func serverEntrypoint(ctx context.Context, cmd *cli.Command) (err error) {
 	// Drop possible elevated permissions
 	if err = dropPermissions(); err != nil {
 		err = fmt.Errorf("failed to drop permissions: %w", err)
@@ -38,7 +38,7 @@ func serverEntrypoint(clictx *cli.Context) (err error) {
 
 	unixListeners, socketPaths = filterUnixListeners(listeners)
 	if len(unixListeners) == 0 {
-		socketPath := clictx.String("socket")
+		socketPath := cmd.String("socket")
 		var server *net.UnixListener
 		var addr *net.UnixAddr
 
@@ -65,7 +65,7 @@ func serverEntrypoint(clictx *cli.Context) (err error) {
 	}
 
 	// Load credential templates
-	configFile := clictx.Path("config")
+	configFile := cmd.String("config")
 	var cfg *config.Config
 	if cfg, err = config.LoadConfig(configFile); err != nil {
 		err = fmt.Errorf("unable to load configuration from '%s': %w", configFile, err)
@@ -85,14 +85,14 @@ func serverEntrypoint(clictx *cli.Context) (err error) {
 		return
 	}
 
-	ctx := cctx.Apply(
-		clictx.Context,
+	ctx = cctx.Apply(
+		ctx,
 		cctx.WithVaultClient(vault),
 		cctx.WithTemplateMap(tm),
 		cctx.WithSocketPaths(socketPaths),
 	)
 
-	if clictx.Bool("dbus") {
+	if cmd.Bool("dbus") {
 		if err = dbus.RegisterSyringeService(ctx); err != nil {
 			err = fmt.Errorf("failed to register dbus service: %w", err)
 			return

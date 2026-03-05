@@ -6,7 +6,7 @@ import (
 	"os/signal"
 	"runtime"
 
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 	"go.uber.org/zap"
 
 	"github.com/ZentriaMC/syringe/internal/version"
@@ -16,18 +16,16 @@ func main() {
 	ctx := context.Background()
 	ctx, _ = signal.NotifyContext(ctx, os.Interrupt)
 
-	app := &cli.App{
+	cmd := &cli.Command{
 		Name:    "syringe",
 		Usage:   "systemd LoadCredential service implementation",
 		Version: version.Version,
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
-				Name:  "debug",
-				Usage: "Whether to enable debug logging",
-				Value: false,
-				EnvVars: []string{
-					"SYRINGE_DEBUG",
-				},
+				Name:    "debug",
+				Usage:   "Whether to enable debug logging",
+				Value:   false,
+				Sources: cli.EnvVars("SYRINGE_DEBUG"),
 			},
 		},
 		Commands: []*cli.Command{
@@ -36,29 +34,24 @@ func main() {
 				Usage:  "Run credentials server",
 				Action: serverEntrypoint,
 				Flags: []cli.Flag{
-					&cli.PathFlag{
-						Name:  "config",
-						Usage: "Path to configuration file",
-						Value: "/etc/syringe/config.yml",
-						EnvVars: []string{
-							"SYRINGE_SERVER_CONFIG",
-						},
+					&cli.StringFlag{
+						Name:      "config",
+						Usage:     "Path to configuration file",
+						Value:     "/etc/syringe/config.yml",
+						TakesFile: true,
+						Sources:   cli.EnvVars("SYRINGE_SERVER_CONFIG"),
 					},
 					&cli.StringFlag{
-						Name:  "socket",
-						Usage: "Path to listen socket. Unnecessary when using systemd socket activation",
-						Value: "/tmp/syringe.sock",
-						EnvVars: []string{
-							"SYRINGE_SERVER_SOCKET",
-						},
+						Name:    "socket",
+						Usage:   "Path to listen socket. Unnecessary when using systemd socket activation",
+						Value:   "/tmp/syringe.sock",
+						Sources: cli.EnvVars("SYRINGE_SERVER_SOCKET"),
 					},
 					&cli.BoolFlag{
-						Name:  "dbus",
-						Usage: "Whether to enable dbus support",
-						Value: runtime.GOOS == "linux",
-						EnvVars: []string{
-							"SYRINGE_SERVER_DBUS",
-						},
+						Name:    "dbus",
+						Usage:   "Whether to enable dbus support",
+						Value:   runtime.GOOS == "linux",
+						Sources: cli.EnvVars("SYRINGE_SERVER_DBUS"),
 					},
 				},
 			},
@@ -90,20 +83,17 @@ func main() {
 				Action: updateEntrypoint,
 			},
 		},
-		Before: func(cctx *cli.Context) (err error) {
-			if err = setupLogging(cctx.Bool("debug")); err != nil {
-				return
-			}
-
-			return
+		Before: func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
+			err := setupLogging(cmd.Bool("debug"))
+			return ctx, err
 		},
-		After: func(ctx *cli.Context) (err error) {
+		After: func(ctx context.Context, cmd *cli.Command) error {
 			_ = zap.L().Sync()
-			return
+			return nil
 		},
 	}
 
-	if err := app.RunContext(ctx, os.Args); err != nil {
+	if err := cmd.Run(ctx, os.Args); err != nil {
 		zap.L().Error("unhandled error", zap.Error(err))
 		os.Exit(1)
 	}

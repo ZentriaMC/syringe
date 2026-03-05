@@ -1,15 +1,15 @@
 //go:build !linux
-// +build !linux
 
 package main
 
 import (
+	"context"
 	"errors"
 
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
-func updateEntrypoint(clictx *cli.Context) (err error) {
+func updateEntrypoint(_ context.Context, _ *cli.Command) (err error) {
 	err = errors.New("not implemented")
 	return
 }

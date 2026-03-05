@@ -2,17 +2,18 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"os"
 
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 
 	"github.com/ZentriaMC/syringe/internal/request"
 )
 
-func manualRequestEntrypoint(clictx *cli.Context) (err error) {
-	unit := clictx.String("unit")
-	socket := clictx.String("socket")
-	credential := clictx.String("credential")
+func manualRequestEntrypoint(_ context.Context, cmd *cli.Command) (err error) {
+	unit := cmd.String("unit")
+	socket := cmd.String("socket")
+	credential := cmd.String("credential")
 
 	var req request.CredentialRequest
 	if req, err = request.NewCredentialRequest(unit, credential); err != nil {

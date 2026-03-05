@@ -1,9 +1,9 @@
 //go:build linux
-// +build linux
 
 package main
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -12,7 +12,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 	"go.uber.org/zap"
 	"golang.org/x/sys/unix"
 
@@ -24,9 +24,8 @@ const (
 	CredentialsDir = "/run/credentials"
 )
 
-func updateEntrypoint(clictx *cli.Context) (err error) {
+func updateEntrypoint(ctx context.Context, _ *cli.Command) (err error) {
 	runtime.GOMAXPROCS(1)
-	ctx := clictx.Context
 
 	if os.Getuid() != 0 && os.Geteuid() != 0 {
 		zap.L().Error("effective uid is not 0, very likely unable to update credentials", zap.Int("uid", os.Getuid()), zap.Int("euid", os.Geteuid()))

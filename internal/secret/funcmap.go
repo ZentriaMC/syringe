@@ -33,10 +33,7 @@ func funcMap(ctx context.Context, opts *TemplateOptions) (fm template.FuncMap) {
 	}
 
 	for name, fn := range sprig.FuncMap() {
-		name := "sprig_" + name
-		fn := fn
-
-		fm[name] = fn
+		fm["sprig_"+name] = fn
 	}
 
 	for _, name := range opts.FunctionsBlacklist {

@@ -1,11 +1,11 @@
 package templatemap
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 
 	"github.com/ZentriaMC/syringe/internal/config"
-	"go.uber.org/multierr"
 )
 
 type CredentialTemplate struct {
@@ -44,14 +44,14 @@ func (tm *TemplateMap) Populate(config *config.Config) (err error) {
 		var lerr error
 		var ct CredentialTemplate
 		if ct, lerr = toCredentialTemplate(template); lerr != nil {
-			err = multierr.Append(err, lerr)
+			err = errors.Join(err, lerr)
 			continue
 		}
 
 		if catchAll {
 			_, ok := newCatchall[unit]
 			if ok {
-				err = multierr.Append(err, fmt.Errorf("catch-all template for unit '%s' is already set", unit))
+				err = errors.Join(err, fmt.Errorf("catch-all template for unit '%s' is already set", unit))
 				continue
 			}
 
@@ -66,7 +66,7 @@ func (tm *TemplateMap) Populate(config *config.Config) (err error) {
 
 				_, ok = credTemplates[credential]
 				if ok {
-					err = multierr.Append(err, fmt.Errorf("template for unit '%s' credential '%s' is already set", unit, credential))
+					err = errors.Join(err, fmt.Errorf("template for unit '%s' credential '%s' is already set", unit, credential))
 					continue
 				}
 

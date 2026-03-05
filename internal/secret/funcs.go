@@ -3,12 +3,13 @@ package secret
 import (
 	"context"
 	"crypto/md5"
+	"os"
 	"crypto/sha1"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
+
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -156,7 +157,7 @@ func (t *templateFn) readFile(path string) (contents string, err error) {
 	key := fmt.Sprintf("file:%s", path)
 	ccontents, err = t.cache(key, func(key string) (v any, err error) {
 		var readBytes []byte
-		if readBytes, err = ioutil.ReadFile(path); err != nil {
+		if readBytes, err = os.ReadFile(path); err != nil {
 			err = fmt.Errorf("unable to read '%s': %w", path, err)
 			return
 		}
