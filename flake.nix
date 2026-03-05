@@ -31,13 +31,13 @@
       let
         pkgs = nixpkgs.legacyPackages.${system};
       in
-      rec {
-        packages.default = packages.syringe;
+      {
+        packages.default = self.packages.${system}.syringe;
         packages.syringe = pkgs.callPackage ./default.nix {
           inherit rev;
         };
 
-        devShell = pkgs.mkShell {
+        devShells.default = pkgs.mkShell {
           buildInputs = [
             pkgs.go
             pkgs.golangci-lint

@@ -1,22 +1,21 @@
 { lib
 , buildGoModule
-, fetchFromGitHub
 , coreutils
 , rev ? "dirty"
 }:
 
-buildGoModule rec {
+buildGoModule {
   pname = "syringe";
   version = rev;
 
   src = lib.cleanSource ./.;
 
-  vendorHash = "sha256-BYa1t6NwtjiHdAqGQdSX15D1FnSLaI7bv78S6F8G/NM=";
+  vendorHash = "sha256-kCalVW5wAEcO+R149xGxuspDR7iywww2xD9vLFuBkeg=";
   subPackages = [ "cmd/syringe" ];
   ldflags = [
     "-s"
     "-w"
-    "-X github.com/ZentriaMC/syringe/internal/version.Version=${version}"
+    "-X github.com/ZentriaMC/syringe/internal/version.Version=${rev}"
   ];
 
   postInstall = ''
@@ -24,7 +23,7 @@ buildGoModule rec {
     install -D -m 644 ./dbus/ee.zentria.syringe1.Syringe.service $out/share/dbus-1/system-services/ee.zentria.syringe1.Syringe.service
 
     substituteInPlace $out/share/dbus-1/system-services/ee.zentria.syringe1.Syringe.service \
-      --replace /bin/false "${coreutils}/bin/false"
+      --replace-fail /bin/false "${coreutils}/bin/false"
   '';
 
   meta = with lib; {

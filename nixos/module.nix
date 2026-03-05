@@ -14,7 +14,7 @@ with lib; {
       socketPaths = mkOption {
         type = types.listOf types.str;
         default = [ "/run/syringe/syringe.sock" ];
-        description = mdDoc ''
+        description = ''
           A list of unix sockets syringe should listen on. The format follows
           ListenStream as described in systemd.socket(5).
           Note that only unix sockets (ListenStream=) are supported.
@@ -27,7 +27,7 @@ with lib; {
           ---
           templates: []
         '';
-        description = mdDoc ''
+        description = ''
           Configuration to be written into config.yml
         '';
       };
