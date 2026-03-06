@@ -7,28 +7,7 @@ storage:
     - path: "/etc/syringe/config.yml"
       mode: 0644
       contents:
-        inline: |
-          ---
-          templates:
-            - unit: "syringe-test.service"
-              credential:
-                - "test-greeting"
-              contents: |
-                unit={{ unitname }}, credential={{ credentialname }}
-            - unit: "syringe-test.service"
-              credential:
-                - "test-hostname"
-              options:
-                sandbox_path: "/etc"
-              contents: |
-                {{ file "/etc/hostname" }}
-            - unit: "syringe-reload-test.service"
-              credential:
-                - "test-data"
-              options:
-                sandbox_path: "/etc/syringe"
-              contents: |
-                {{ file "/etc/syringe/reload-data" }}
+        local: "hack/init/syringe-config.yml"
 
     - path: "/etc/syringe/reload-data"
       mode: 0644
@@ -38,39 +17,12 @@ storage:
     - path: "/etc/dbus-1/system.d/ee.zentria.syringe1.Syringe.conf"
       mode: 0644
       contents:
-        inline: |
-          <!DOCTYPE busconfig PUBLIC
-           "-//freedesktop//DTD D-BUS Bus Configuration 1.0//EN"
-           "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">
-          <busconfig>
-            <policy context="default">
-              <deny send_destination="ee.zentria.syringe1.Syringe"
-                    send_type="method_call"/>
-              <allow send_destination="ee.zentria.syringe1.Syringe"
-                     send_interface="org.freedesktop.DBus.Introspectable"/>
-              <allow send_destination="ee.zentria.syringe1.Syringe"
-                     send_interface="org.freedesktop.DBus.Properties"/>
-              <allow send_destination="ee.zentria.syringe1.Syringe"
-                     send_interface="org.freedesktop.DBus.ObjectManager"/>
-              <allow send_destination="ee.zentria.syringe1.Syringe"
-                     send_interface="ee.zentria.syringe1.Syringe"
-                     send_member="GetSocketPaths"/>
-            </policy>
-            <policy user="root">
-              <allow own="ee.zentria.syringe1.Syringe"/>
-              <allow send_destination="ee.zentria.syringe1.Syringe"/>
-            </policy>
-          </busconfig>
+        local: "dbus/ee.zentria.syringe1.Syringe.conf"
 
     - path: "/usr/local/share/dbus-1/system-services/ee.zentria.syringe1.Syringe.service"
       mode: 0644
       contents:
-        inline: |
-          [D-BUS Service]
-          Name=ee.zentria.syringe1.Syringe
-          User=root
-          Exec=/bin/false
-          SystemdService=dbus-ee.zentria.syringe1.Syringe.service
+        local: "dbus/ee.zentria.syringe1.Syringe.service"
 
 systemd:
   units:

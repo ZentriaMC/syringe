@@ -200,6 +200,57 @@ else
     failures=$((failures + 1))
 fi
 
+# -- Test: D-Bus config reload --
+echo ">>> Testing D-Bus config reload..."
+fh_ssh -- "sudo systemctl stop syringe-reload-test.service" 2>/dev/null || true
+fh_ssh -- "echo before-reload | sudo tee /etc/syringe/reload-data > /dev/null"
+
+# Add a new template via config change, then trigger reload via D-Bus
+fh_ssh -- "sudo tee /etc/syringe/config.yml > /dev/null" <<'CONF'
+---
+templates:
+  - unit: "syringe-test.service"
+    credential:
+      - "test-greeting"
+    contents: |
+      unit={{ unitname }}, credential={{ credentialname }}
+  - unit: "syringe-test.service"
+    credential:
+      - "test-hostname"
+    options:
+      sandbox_path: "/etc"
+    contents: |
+      {{ file "/etc/hostname" }}
+  - unit: "syringe-reload-test.service"
+    credential:
+      - "test-data"
+    options:
+      sandbox_path: "/etc/syringe"
+    contents: |
+      {{ file "/etc/syringe/reload-data" }}
+  - unit: "syringe-dbus-reload-test.service"
+    credential:
+      - "test-dbus"
+    contents: |
+      dbus-reload-ok
+CONF
+
+fh_ssh -- "sudo busctl call ee.zentria.syringe1.Syringe /ee/zentria/syringe1 ee.zentria.syringe1.Syringe Reload"
+
+# Start a service that uses the new template added after reload
+fh_ssh -- "sudo systemd-run --unit=syringe-dbus-reload-test.service --property=Type=oneshot --property='LoadCredential=test-dbus:/run/syringe/syringe.sock' /bin/sh -c 'cp \"\$CREDENTIALS_DIRECTORY/test-dbus\" /tmp/syringe-e2e-dbus-reload'"
+
+dbus_reload_cred="$(fh_ssh -- "sudo cat /tmp/syringe-e2e-dbus-reload")"
+if [ "${dbus_reload_cred}" = "dbus-reload-ok" ]; then
+    echo "  PASS: D-Bus config reload picked up new template"
+else
+    echo "  FAIL: D-Bus config reload"
+    echo "    expected: dbus-reload-ok"
+    echo "    got:      ${dbus_reload_cred}"
+    fh_ssh -- "sudo journalctl -u syringe.service --no-pager -n 20" || true
+    failures=$((failures + 1))
+fi
+
 if [ "${failures}" -gt 0 ]; then
     echo ">>> ${failures} test(s) FAILED"
     echo ">>> Serial log tail:"

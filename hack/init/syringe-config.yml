@@ -1,0 +1,21 @@
+---
+templates:
+  - unit: "syringe-test.service"
+    credential:
+      - "test-greeting"
+    contents: |
+      unit={{ unitname }}, credential={{ credentialname }}
+  - unit: "syringe-test.service"
+    credential:
+      - "test-hostname"
+    options:
+      sandbox_path: "/etc"
+    contents: |
+      {{ file "/etc/hostname" }}
+  - unit: "syringe-reload-test.service"
+    credential:
+      - "test-data"
+    options:
+      sandbox_path: "/etc/syringe"
+    contents: |
+      {{ file "/etc/syringe/reload-data" }}
