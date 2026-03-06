@@ -21,7 +21,7 @@ func manualRequestEntrypoint(_ context.Context, cmd *cli.Command) (err error) {
 	}
 
 	var buf bytes.Buffer
-	if _, err = requestCredential(socket, req, &buf); err != nil {
+	if _, err = request.FetchCredential(socket, req, &buf); err != nil {
 		return
 	}
 

@@ -2,7 +2,7 @@
 
 let
   cfg = config.services.syringe;
-  suidHelper = "${config.security.wrapperDir}/syringe";
+  suidHelper = "${config.security.wrapperDir}/syringe-update";
 
   configPath = "/etc/syringe/config.yml";
 in
@@ -10,7 +10,6 @@ with lib; {
   options = {
     services.syringe = {
       enable = mkEnableOption "Whether to enable syringe service";
-      supportUpdating = mkEnableOption "Whether to enable syringe secret updating support - requires SUID/SGID wrapper";
       socketPaths = mkOption {
         type = types.listOf types.str;
         default = [ "/run/syringe/syringe.sock" ];
@@ -29,6 +28,18 @@ with lib; {
         '';
         description = ''
           Configuration to be written into config.yml
+        '';
+      };
+
+      updateBinary = mkOption {
+        type = types.str;
+        default =
+          if cfg.enable then suidHelper
+          else throw "services.syringe.updateBinary: syringe is not enabled";
+        readOnly = true;
+        description = ''
+          Path to the SUID-wrapped syringe-update binary.
+          Use this in ExecReload= to reference the correct binary path.
         '';
       };
     };
@@ -73,12 +84,12 @@ with lib; {
 
     services.dbus.packages = [ pkgs.syringe ];
 
-    security.wrappers.syringe = mkIf (cfg.enable && cfg.supportUpdating) {
+    security.wrappers.syringe-update = {
       setuid = true;
       setgid = true;
       owner = "root";
       group = "root";
-      source = "${pkgs.syringe}/bin/syringe";
+      source = "${pkgs.syringe}/bin/syringe-update";
     };
   };
 }

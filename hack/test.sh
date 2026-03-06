@@ -36,11 +36,13 @@ sha256() {
     fi
 }
 
-# -- Build syringe binary for Linux --
+# -- Build syringe binaries for Linux --
 echo ">>> Building syringe for linux..."
 syringe_bin="${work_dir}/syringe"
+syringe_update_bin="${work_dir}/syringe-update"
 mkdir -p "${work_dir}"
 GOOS=linux CGO_ENABLED=0 go build -o "${syringe_bin}" ./cmd/syringe
+GOOS=linux CGO_ENABLED=0 go build -o "${syringe_update_bin}" ./cmd/syringe-update
 
 # -- Build Ignition config --
 echo ">>> Building Ignition config..."
@@ -52,7 +54,7 @@ echo ">>> Ensuring FCOS base image..."
 fh image
 
 # -- Snapshot caching --
-current_hash="$({ sha256 "${ign}"; sha256 "${syringe_bin}"; } | sha256 /dev/stdin)"
+current_hash="$({ sha256 "${ign}"; sha256 "${syringe_bin}"; sha256 "${syringe_update_bin}"; } | sha256 /dev/stdin)"
 use_snapshot=false
 
 if [ "${REBUILD_SNAPSHOT:-}" != "1" ] \
@@ -88,12 +90,13 @@ if [ "${use_snapshot}" = "false" ]; then
     echo ">>> Waiting for SSH..."
     fh_ssh --wait 180 -- true
 
-    echo ">>> Deploying syringe binary..."
+    echo ">>> Deploying syringe binaries..."
     scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR \
         -P "${ssh_port}" -i "${ssh_key}" \
-        "${syringe_bin}" core@127.0.0.1:/tmp/syringe
+        "${syringe_bin}" "${syringe_update_bin}" core@127.0.0.1:/tmp/
     fh_ssh -- "sudo install -m 755 /tmp/syringe /usr/local/bin/syringe && rm /tmp/syringe"
-    fh_ssh -- "sudo chcon -t initrc_exec_t /usr/local/bin/syringe"
+    fh_ssh -- "sudo install -m 4755 /tmp/syringe-update /usr/local/bin/syringe-update && rm /tmp/syringe-update"
+    fh_ssh -- "sudo chcon -t initrc_exec_t /usr/local/bin/syringe /usr/local/bin/syringe-update"
 
     echo ">>> Reloading D-Bus and systemd..."
     fh_ssh -- "sudo systemctl reload dbus"

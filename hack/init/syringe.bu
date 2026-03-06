@@ -80,6 +80,6 @@ systemd:
         Type=simple
         LoadCredential=test-data:/run/syringe/syringe.sock
         ExecStart=/bin/bash -c 'while :; do cat "$CREDENTIALS_DIRECTORY/test-data" > /tmp/syringe-e2e-reload; sleep 1; done'
-        ExecReload=/usr/local/bin/syringe update
+        ExecReload=/usr/local/bin/syringe-update
 
 # vim: ft=yaml

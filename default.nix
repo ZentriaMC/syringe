@@ -11,7 +11,7 @@ buildGoModule {
   src = lib.cleanSource ./.;
 
   vendorHash = "sha256-kCalVW5wAEcO+R149xGxuspDR7iywww2xD9vLFuBkeg=";
-  subPackages = [ "cmd/syringe" ];
+  subPackages = [ "cmd/syringe" "cmd/syringe-update" ];
   ldflags = [
     "-s"
     "-w"

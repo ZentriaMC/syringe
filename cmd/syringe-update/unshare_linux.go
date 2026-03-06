@@ -42,7 +42,6 @@ func withMountNSOf(targetPID int, f func() error) (err error) {
 		}
 
 		if err := unix.Setns(newNS, unix.CLONE_NEWNS); err != nil {
-			//err = fmt.Errorf("failed to switch to new ns: %w", err)
 			zap.L().Panic("failed to switch to new ns", zap.Error(err))
 		}
 
@@ -51,7 +50,6 @@ func withMountNSOf(targetPID int, f func() error) (err error) {
 
 	defer func() {
 		if err := unix.Setns(oldNS, unix.CLONE_NEWNS); err != nil {
-			//err = fmt.Errorf("failed to switch back to original ns: %w", err)
 			zap.L().Panic("failed to switch back to original ns", zap.Error(err))
 		}
 		_ = syscall.Close(oldNS)

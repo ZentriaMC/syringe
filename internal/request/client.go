@@ -1,4 +1,4 @@
-package main
+package request
 
 import (
 	"encoding/binary"
@@ -7,11 +7,10 @@ import (
 	"net"
 	"runtime"
 
-	"github.com/ZentriaMC/syringe/internal/request"
 	"github.com/ZentriaMC/syringe/internal/secret"
 )
 
-func requestCredential(socket string, cr request.CredentialRequest, out io.Writer) (n int64, err error) {
+func FetchCredential(socket string, cr CredentialRequest, out io.Writer) (n int64, err error) {
 	var conn *net.UnixConn
 	var laddr, raddr *net.UnixAddr
 	var request []byte

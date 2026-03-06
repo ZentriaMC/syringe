@@ -2,5 +2,6 @@
 /.envrc.local
 /result
 /syringe
+/syringe-update
 /tmp/
 hack/init/*.ign
