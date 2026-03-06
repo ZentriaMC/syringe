@@ -267,6 +267,97 @@ else
     failures=$((failures + 1))
 fi
 
+# -- Test: age decryption via SSH host key --
+echo ">>> Testing age decryption..."
+
+# Get the VM's SSH host public key and encrypt a test secret on the host
+ssh_host_pubkey="${work_dir}/vm_host_ed25519.pub"
+fh_ssh -- "cat /etc/ssh/ssh_host_ed25519_key.pub" > "${ssh_host_pubkey}"
+
+age_secret="age-decryption-e2e-ok"
+age_encrypted="${work_dir}/age-test-secret.age"
+echo -n "${age_secret}" | age -R "${ssh_host_pubkey}" -o "${age_encrypted}"
+
+# Deploy the encrypted file to the VM
+scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR \
+    -P "${ssh_port}" -i "${ssh_key}" \
+    "${age_encrypted}" core@127.0.0.1:/tmp/age-test-secret.age
+fh_ssh -- "sudo install -m 644 /tmp/age-test-secret.age /etc/syringe/age-test-secret.age && rm /tmp/age-test-secret.age"
+
+# Reload syringe with age identity + template
+fh_ssh -- "sudo tee /etc/syringe/config.yml > /dev/null" <<'CONF'
+---
+age:
+  identities:
+    - /etc/ssh/ssh_host_ed25519_key
+
+templates:
+  - unit: "syringe-age-test.service"
+    credential:
+      - "test-age"
+    options:
+      sandbox_path: "/etc/syringe"
+    contents: |
+      {{ age "/etc/syringe/age-test-secret.age" }}
+CONF
+
+fh_ssh -- "sudo busctl call ee.zentria.syringe1.Syringe /ee/zentria/syringe1 ee.zentria.syringe1.Syringe Reload"
+
+fh_ssh -- "sudo systemd-run --unit=syringe-age-test.service --property=Type=oneshot --property='LoadCredential=test-age:/run/syringe/syringe.sock' /bin/sh -c 'cp \"\$CREDENTIALS_DIRECTORY/test-age\" /tmp/syringe-e2e-age'"
+
+age_cred="$(fh_ssh -- "sudo cat /tmp/syringe-e2e-age")"
+if [ "${age_cred}" = "${age_secret}" ]; then
+    echo "  PASS: age decryption with SSH host key"
+else
+    echo "  FAIL: age decryption"
+    echo "    expected: ${age_secret}"
+    echo "    got:      ${age_cred}"
+    fh_ssh -- "sudo journalctl -u syringe.service --no-pager -n 20" || true
+    failures=$((failures + 1))
+fi
+
+# -- Test: age decryption with JSON --
+echo ">>> Testing age JSON decryption..."
+
+age_json_encrypted="${work_dir}/age-test-json.age"
+echo -n '{"db_host":"localhost","db_pass":"s3cret"}' | age -R "${ssh_host_pubkey}" -o "${age_json_encrypted}"
+
+scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR \
+    -P "${ssh_port}" -i "${ssh_key}" \
+    "${age_json_encrypted}" core@127.0.0.1:/tmp/age-test-json.age
+fh_ssh -- "sudo install -m 644 /tmp/age-test-json.age /etc/syringe/age-test-json.age && rm /tmp/age-test-json.age"
+
+fh_ssh -- "sudo tee /etc/syringe/config.yml > /dev/null" <<'CONF'
+---
+age:
+  identities:
+    - /etc/ssh/ssh_host_ed25519_key
+
+templates:
+  - unit: "syringe-age-json-test.service"
+    credential:
+      - "test-age-json"
+    options:
+      sandbox_path: "/etc/syringe"
+    contents: |
+      {{ (age "/etc/syringe/age-test-json.age" | sprig_fromJson).db_pass }}
+CONF
+
+fh_ssh -- "sudo busctl call ee.zentria.syringe1.Syringe /ee/zentria/syringe1 ee.zentria.syringe1.Syringe Reload"
+
+fh_ssh -- "sudo systemd-run --unit=syringe-age-json-test.service --property=Type=oneshot --property='LoadCredential=test-age-json:/run/syringe/syringe.sock' /bin/sh -c 'cp \"\$CREDENTIALS_DIRECTORY/test-age-json\" /tmp/syringe-e2e-age-json'"
+
+age_json_cred="$(fh_ssh -- "sudo cat /tmp/syringe-e2e-age-json")"
+if [ "${age_json_cred}" = "s3cret" ]; then
+    echo "  PASS: age JSON decryption with SSH host key"
+else
+    echo "  FAIL: age JSON decryption"
+    echo "    expected: s3cret"
+    echo "    got:      ${age_json_cred}"
+    fh_ssh -- "sudo journalctl -u syringe.service --no-pager -n 20" || true
+    failures=$((failures + 1))
+fi
+
 if [ "${failures}" -gt 0 ]; then
     echo ">>> ${failures} test(s) FAILED"
     echo ">>> Serial log tail:"
