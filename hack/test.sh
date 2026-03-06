@@ -98,9 +98,8 @@ if [ "${use_snapshot}" = "false" ]; then
     echo ">>> Reloading D-Bus and systemd..."
     fh_ssh -- "sudo systemctl reload dbus"
     fh_ssh -- "sudo systemctl daemon-reload"
-    fh_ssh -- "sudo systemctl reset-failed syringe.service"
-    fh_ssh -- "sudo systemctl restart syringe.socket"
-    fh_ssh -- "sudo systemctl restart syringe.service"
+    fh_ssh -- "sudo systemctl start syringe.socket"
+    fh_ssh -- "sudo systemctl start syringe.service"
 
     echo ">>> Running goss validation..."
     fh goss "${root}/hack/goss.yaml" --ssh-key "${ssh_key}" --ssh-port "${ssh_port}" --retry-timeout-secs 60
@@ -168,6 +167,36 @@ else
     echo "  FAIL: test-hostname credential"
     echo "    expected: ${expected_hostname}"
     echo "    got:      ${hostname_cred}"
+    failures=$((failures + 1))
+fi
+
+# -- Test: credential reload via ExecReload --
+echo ">>> Testing credential reload..."
+fh_ssh -- "sudo systemctl start syringe-reload-test.service"
+sleep 2
+
+reload_cred="$(fh_ssh -- "sudo cat /tmp/syringe-e2e-reload")"
+if [ "${reload_cred}" = "before-reload" ]; then
+    echo "  PASS: reload test initial credential matches"
+else
+    echo "  FAIL: reload test initial credential"
+    echo "    expected: before-reload"
+    echo "    got:      ${reload_cred}"
+    failures=$((failures + 1))
+fi
+
+fh_ssh -- "echo after-reload | sudo tee /etc/syringe/reload-data > /dev/null"
+fh_ssh -- "sudo systemctl reload syringe-reload-test.service"
+sleep 2
+
+reload_cred_after="$(fh_ssh -- "sudo cat /tmp/syringe-e2e-reload")"
+if [ "${reload_cred_after}" = "after-reload" ]; then
+    echo "  PASS: credential reload picked up new content"
+else
+    echo "  FAIL: credential reload"
+    echo "    expected: after-reload"
+    echo "    got:      ${reload_cred_after}"
+    fh_ssh -- "sudo journalctl -u syringe-reload-test.service --no-pager -n 20" || true
     failures=$((failures + 1))
 fi
 

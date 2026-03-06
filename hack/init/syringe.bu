@@ -22,6 +22,18 @@ storage:
                 sandbox_path: "/etc"
               contents: |
                 {{ file "/etc/hostname" }}
+            - unit: "syringe-reload-test.service"
+              credential:
+                - "test-data"
+              options:
+                sandbox_path: "/etc/syringe"
+              contents: |
+                {{ file "/etc/syringe/reload-data" }}
+
+    - path: "/etc/syringe/reload-data"
+      mode: 0644
+      contents:
+        inline: "before-reload"
 
     - path: "/etc/dbus-1/system.d/ee.zentria.syringe1.Syringe.conf"
       mode: 0644
@@ -75,7 +87,7 @@ systemd:
         WantedBy=sockets.target
 
     - name: "syringe.service"
-      enabled: true
+      enabled: false
       contents: |
         [Unit]
         After=syringe.socket
@@ -92,6 +104,7 @@ systemd:
         Alias=dbus-ee.zentria.syringe1.Syringe.service
 
     - name: "syringe-test.service"
+      enabled: false
       contents: |
         [Unit]
         Description=Syringe E2E credential test
@@ -103,5 +116,18 @@ systemd:
         LoadCredential=test-greeting:/run/syringe/syringe.sock
         LoadCredential=test-hostname:/run/syringe/syringe.sock
         ExecStart=/bin/sh -c 'cp "$CREDENTIALS_DIRECTORY/test-greeting" /tmp/syringe-e2e-greeting && cp "$CREDENTIALS_DIRECTORY/test-hostname" /tmp/syringe-e2e-hostname'
+
+    - name: "syringe-reload-test.service"
+      enabled: false
+      contents: |
+        [Unit]
+        Description=Syringe E2E credential reload test
+        After=syringe.socket
+
+        [Service]
+        Type=simple
+        LoadCredential=test-data:/run/syringe/syringe.sock
+        ExecStart=/bin/bash -c 'while :; do cat "$CREDENTIALS_DIRECTORY/test-data" > /tmp/syringe-e2e-reload; sleep 1; done'
+        ExecReload=/usr/local/bin/syringe update
 
 # vim: ft=yaml
