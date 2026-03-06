@@ -41,6 +41,7 @@
 
         devShells.default = pkgs.mkShell {
           buildInputs = [
+            pkgs.age
             pkgs.go
             pkgs.golangci-lint
             pkgs.gopls

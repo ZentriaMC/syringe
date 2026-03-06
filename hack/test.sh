@@ -44,6 +44,17 @@ mkdir -p "${work_dir}"
 GOOS=linux CGO_ENABLED=0 go build -o "${syringe_bin}" ./cmd/syringe
 GOOS=linux CGO_ENABLED=0 go build -o "${syringe_update_bin}" ./cmd/syringe-update
 
+echo ">>> Fetching age for linux..."
+age_version="1.3.1"
+age_arch="$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')"
+age_tarball="${work_dir}/age-v${age_version}-linux-${age_arch}.tar.gz"
+age_bin="${work_dir}/age"
+if [ ! -f "${age_bin}" ]; then
+    curl -sL "https://github.com/FiloSottile/age/releases/download/v${age_version}/age-v${age_version}-linux-${age_arch}.tar.gz" -o "${age_tarball}"
+    tar -xzf "${age_tarball}" -C "${work_dir}" --strip-components=1 age/age age/age-keygen
+    rm -f "${age_tarball}"
+fi
+
 # -- Build Ignition config --
 echo ">>> Building Ignition config..."
 make -C "${root}/hack/init" config.ign
@@ -54,7 +65,7 @@ echo ">>> Ensuring FCOS base image..."
 fh image
 
 # -- Snapshot caching --
-current_hash="$({ sha256 "${ign}"; sha256 "${syringe_bin}"; sha256 "${syringe_update_bin}"; } | sha256 /dev/stdin)"
+current_hash="$({ sha256 "${ign}"; sha256 "${syringe_bin}"; sha256 "${syringe_update_bin}"; sha256 "${age_bin}"; } | sha256 /dev/stdin)"
 use_snapshot=false
 
 if [ "${REBUILD_SNAPSHOT:-}" != "1" ] \
@@ -90,12 +101,14 @@ if [ "${use_snapshot}" = "false" ]; then
     echo ">>> Waiting for SSH..."
     fh_ssh --wait 180 -- true
 
-    echo ">>> Deploying syringe binaries..."
+    echo ">>> Deploying syringe and age binaries..."
     scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR \
         -P "${ssh_port}" -i "${ssh_key}" \
-        "${syringe_bin}" "${syringe_update_bin}" core@127.0.0.1:/tmp/
+        "${syringe_bin}" "${syringe_update_bin}" "${age_bin}" "${work_dir}/age-keygen" core@127.0.0.1:/tmp/
     fh_ssh -- "sudo install -m 755 /tmp/syringe /usr/local/bin/syringe && rm /tmp/syringe"
     fh_ssh -- "sudo install -m 4755 /tmp/syringe-update /usr/local/bin/syringe-update && rm /tmp/syringe-update"
+    fh_ssh -- "sudo install -m 755 /tmp/age /usr/local/bin/age && rm /tmp/age"
+    fh_ssh -- "sudo install -m 755 /tmp/age-keygen /usr/local/bin/age-keygen && rm /tmp/age-keygen"
     fh_ssh -- "sudo chcon -t initrc_exec_t /usr/local/bin/syringe /usr/local/bin/syringe-update"
 
     echo ">>> Reloading D-Bus and systemd..."
