@@ -1,0 +1,12 @@
+---
+variant: "fcos"
+version: "1.5.0"
+
+ignition:
+  config:
+    merge:
+      - local: "base.ign"
+      - local: "syringe.ign"
+      - local: "users.ign"
+
+# vim: ft=yaml

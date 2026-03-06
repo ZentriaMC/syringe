@@ -1,0 +1,11 @@
+---
+variant: "fcos"
+version: "1.5.0"
+
+passwd:
+  users:
+    - name: "core"
+      ssh_authorized_keys_local:
+        - "hack/dev/dev_ed25519.pub"
+
+# vim: ft=yaml

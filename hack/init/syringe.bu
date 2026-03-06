@@ -1,0 +1,107 @@
+---
+variant: "fcos"
+version: "1.5.0"
+
+storage:
+  files:
+    - path: "/etc/syringe/config.yml"
+      mode: 0644
+      contents:
+        inline: |
+          ---
+          templates:
+            - unit: "syringe-test.service"
+              credential:
+                - "test-greeting"
+              contents: |
+                unit={{ unitname }}, credential={{ credentialname }}
+            - unit: "syringe-test.service"
+              credential:
+                - "test-hostname"
+              options:
+                sandbox_path: "/etc"
+              contents: |
+                {{ file "/etc/hostname" }}
+
+    - path: "/etc/dbus-1/system.d/ee.zentria.syringe1.Syringe.conf"
+      mode: 0644
+      contents:
+        inline: |
+          <!DOCTYPE busconfig PUBLIC
+           "-//freedesktop//DTD D-BUS Bus Configuration 1.0//EN"
+           "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">
+          <busconfig>
+            <policy context="default">
+              <deny send_destination="ee.zentria.syringe1.Syringe"
+                    send_type="method_call"/>
+              <allow send_destination="ee.zentria.syringe1.Syringe"
+                     send_interface="org.freedesktop.DBus.Introspectable"/>
+              <allow send_destination="ee.zentria.syringe1.Syringe"
+                     send_interface="org.freedesktop.DBus.Properties"/>
+              <allow send_destination="ee.zentria.syringe1.Syringe"
+                     send_interface="org.freedesktop.DBus.ObjectManager"/>
+              <allow send_destination="ee.zentria.syringe1.Syringe"
+                     send_interface="ee.zentria.syringe1.Syringe"
+                     send_member="GetSocketPaths"/>
+            </policy>
+            <policy user="root">
+              <allow own="ee.zentria.syringe1.Syringe"/>
+              <allow send_destination="ee.zentria.syringe1.Syringe"/>
+            </policy>
+          </busconfig>
+
+    - path: "/usr/local/share/dbus-1/system-services/ee.zentria.syringe1.Syringe.service"
+      mode: 0644
+      contents:
+        inline: |
+          [D-BUS Service]
+          Name=ee.zentria.syringe1.Syringe
+          User=root
+          Exec=/bin/false
+          SystemdService=dbus-ee.zentria.syringe1.Syringe.service
+
+systemd:
+  units:
+    - name: "syringe.socket"
+      enabled: true
+      contents: |
+        [Socket]
+        ListenStream=/run/syringe/syringe.sock
+        SocketMode=0600
+        SocketUser=root
+        SocketGroup=root
+
+        [Install]
+        WantedBy=sockets.target
+
+    - name: "syringe.service"
+      enabled: true
+      contents: |
+        [Unit]
+        After=syringe.socket
+        Requires=syringe.socket
+        Wants=syringe.socket
+
+        [Service]
+        Type=dbus
+        BusName=ee.zentria.syringe1.Syringe
+        ExecStart=/usr/local/bin/syringe server
+
+        [Install]
+        WantedBy=multi-user.target
+        Alias=dbus-ee.zentria.syringe1.Syringe.service
+
+    - name: "syringe-test.service"
+      contents: |
+        [Unit]
+        Description=Syringe E2E credential test
+        After=syringe.socket
+
+        [Service]
+        Type=oneshot
+        RemainAfterExit=true
+        LoadCredential=test-greeting:/run/syringe/syringe.sock
+        LoadCredential=test-hostname:/run/syringe/syringe.sock
+        ExecStart=/bin/sh -c 'cp "$CREDENTIALS_DIRECTORY/test-greeting" /tmp/syringe-e2e-greeting && cp "$CREDENTIALS_DIRECTORY/test-hostname" /tmp/syringe-e2e-hostname'
+
+# vim: ft=yaml

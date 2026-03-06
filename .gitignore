@@ -1,4 +1,6 @@
 /.direnv
-/.envrc
+/.envrc.local
 /result
 /syringe
+/tmp/
+hack/init/*.ign

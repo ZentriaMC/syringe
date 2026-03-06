@@ -4,9 +4,11 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
+    fcos-harness.url = "github:ZentriaMC/fcos-harness";
+    fcos-harness.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
+  outputs = { self, nixpkgs, flake-utils, fcos-harness }:
     let
       rev = self.rev or "dirty";
 
@@ -42,7 +44,12 @@
             pkgs.go
             pkgs.golangci-lint
             pkgs.gopls
+            pkgs.butane
+            pkgs.qemu
+            fcos-harness.packages.${system}.default
           ];
+
+          BUTANE = "${pkgs.butane}/bin/butane";
         };
       });
 }

@@ -1,0 +1,28 @@
+---
+command:
+  ssh-accessible:
+    exec: "whoami"
+    exit-status: 0
+    stdout:
+      - "core"
+  sudo-works:
+    exec: "sudo whoami"
+    exit-status: 0
+    stdout:
+      - "root"
+  syringe-socket-active:
+    exec: "systemctl is-active syringe.socket"
+    exit-status: 0
+    stdout:
+      - "active"
+  syringe-config-exists:
+    exec: "test -f /etc/syringe/config.yml"
+    exit-status: 0
+  dbus-config-exists:
+    exec: "test -f /etc/dbus-1/system.d/ee.zentria.syringe1.Syringe.conf"
+    exit-status: 0
+  syringe-service-active:
+    exec: "systemctl is-active syringe.service"
+    exit-status: 0
+    stdout:
+      - "active"

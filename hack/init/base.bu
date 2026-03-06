@@ -1,0 +1,17 @@
+---
+variant: "fcos"
+version: "1.5.0"
+
+kernel_arguments:
+  should_exist:
+    - "crashkernel=256M"
+    - "enforcing=0"
+
+storage:
+  files:
+    - path: "/etc/hostname"
+      mode: 0644
+      contents:
+        inline: "syringe-test"
+
+# vim: ft=yaml
