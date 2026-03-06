@@ -24,8 +24,20 @@ const (
 	CredentialsDir = "/run/credentials"
 )
 
-func updateEntrypoint(ctx context.Context, _ *cli.Command) (err error) {
+func updateEntrypoint(ctx context.Context, cmd *cli.Command) (err error) {
 	runtime.GOMAXPROCS(1)
+
+	// Reconfigure logger according to global debug flag via D-Bus
+	if !cmd.Bool("debug") && !cmd.Bool("debug-global") {
+		if debug, derr := dbus.GetGlobalDebug(ctx); derr != nil {
+			zap.L().Debug("unable to get global debug flag", zap.Error(derr))
+		} else if debug {
+			if err = setupLogging(true); err != nil {
+				return
+			}
+			zap.L().Debug("global debugging enabled via D-Bus")
+		}
+	}
 
 	if os.Getuid() != 0 && os.Geteuid() != 0 {
 		zap.L().Error("effective uid is not 0, very likely unable to update credentials", zap.Int("uid", os.Getuid()), zap.Int("euid", os.Geteuid()))

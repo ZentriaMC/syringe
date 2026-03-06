@@ -7,6 +7,24 @@ import (
 	"github.com/godbus/dbus/v5"
 )
 
+func GetGlobalDebug(ctx context.Context) (debug bool, err error) {
+	var conn *dbus.Conn
+
+	if conn, err = dbus.ConnectSystemBus(); err != nil {
+		err = fmt.Errorf("failed to establish dbus connection: %w", err)
+		return
+	}
+	defer conn.Close()
+
+	obj := conn.Object(intf, objPath)
+	if err = obj.CallWithContext(ctx, intf+".GetGlobalDebug", 0).Store(&debug); err != nil {
+		err = fmt.Errorf("failed to call GetGlobalDebug: %w", err)
+		return
+	}
+
+	return
+}
+
 func GetServiceSocketPaths(ctx context.Context) (socketPaths map[string]bool, err error) {
 	var conn *dbus.Conn
 

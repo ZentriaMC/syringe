@@ -98,6 +98,7 @@ func serverEntrypoint(ctx context.Context, cmd *cli.Command) (err error) {
 		cctx.WithVaultClient(vault),
 		cctx.WithTemplateMap(tm),
 		cctx.WithSocketPaths(socketPaths),
+		cctx.WithGlobalDebug(cmd.Bool("debug-global")),
 	)
 
 	if cmd.Bool("dbus") {

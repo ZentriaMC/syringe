@@ -28,6 +28,11 @@ const intro = introspect.IntrospectDeclarationString + `
         <method name="Reload">
             <doc:doc><doc:description>Reload syringe configuration by sending SIGHUP to self</doc:description></doc:doc>
         </method>
+        <method name="GetGlobalDebug">
+            <arg direction="out" type="b">
+                <doc:doc><doc:summary>Whether global debug logging is enabled</doc:summary></doc:doc>
+            </arg>
+        </method>
     </interface>
     ` + introspect.IntrospectDataString + `
 </node>
@@ -41,6 +46,11 @@ type syringeService struct {
 
 func (s *syringeService) GetSocketPaths() (v []string, err *dbus.Error) {
 	v = cctx.SocketPaths(s.ctx)
+	return
+}
+
+func (s *syringeService) GetGlobalDebug() (v bool, err *dbus.Error) {
+	v = cctx.GlobalDebug(s.ctx)
 	return
 }
 

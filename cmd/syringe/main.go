@@ -27,6 +27,12 @@ func main() {
 				Value:   false,
 				Sources: cli.EnvVars("SYRINGE_DEBUG"),
 			},
+			&cli.BoolFlag{
+				Name:    "debug-global",
+				Usage:   "Whether to enable debug logging for all syringe clients via D-Bus",
+				Value:   false,
+				Sources: cli.EnvVars("SYRINGE_DEBUG_GLOBAL"),
+			},
 		},
 		Commands: []*cli.Command{
 			{
@@ -84,7 +90,7 @@ func main() {
 			},
 		},
 		Before: func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
-			err := setupLogging(cmd.Bool("debug"))
+			err := setupLogging(cmd.Bool("debug") || cmd.Bool("debug-global"))
 			return ctx, err
 		},
 		After: func(ctx context.Context, cmd *cli.Command) error {
