@@ -16,6 +16,7 @@ import (
 	"github.com/urfave/cli/v3"
 	"go.uber.org/zap"
 
+	syrage "github.com/ZentriaMC/syringe/internal/age"
 	"github.com/ZentriaMC/syringe/internal/config"
 	cctx "github.com/ZentriaMC/syringe/internal/ctx"
 	"github.com/ZentriaMC/syringe/internal/dbus"
@@ -23,11 +24,19 @@ import (
 	"github.com/ZentriaMC/syringe/internal/templatemap"
 )
 
-func loadConfig(configFile string, tm *templatemap.TemplateMap) (err error) {
+func loadConfig(configFile string, tm *templatemap.TemplateMap, dec *syrage.Decryptor) (err error) {
 	var cfg *config.Config
 	if cfg, err = config.LoadConfig(configFile); err != nil {
 		err = fmt.Errorf("unable to load configuration from '%s': %w", configFile, err)
 		return
+	}
+
+	if cfg.Age != nil && len(cfg.Age.Identities) > 0 {
+		if err = dec.LoadIdentities(cfg.Age.Identities); err != nil {
+			err = fmt.Errorf("failed to load age identities: %w", err)
+			return
+		}
+		zap.L().Info("loaded age identities", zap.Int("count", len(cfg.Age.Identities)))
 	}
 
 	return tm.Populate(cfg)
@@ -79,9 +88,10 @@ func serverEntrypoint(ctx context.Context, cmd *cli.Command) (err error) {
 		socketPaths = append(socketPaths, socketPath)
 	}
 
-	// Load credential templates
+	// Load credential templates and age identities
 	tm := templatemap.NewTemplateMap()
-	if err = loadConfig(cmd.String("config"), tm); err != nil {
+	dec := syrage.NewDecryptor()
+	if err = loadConfig(cmd.String("config"), tm, dec); err != nil {
 		return
 	}
 
@@ -97,6 +107,7 @@ func serverEntrypoint(ctx context.Context, cmd *cli.Command) (err error) {
 		ctx,
 		cctx.WithVaultClient(vault),
 		cctx.WithTemplateMap(tm),
+		cctx.WithAgeDecryptor(dec),
 		cctx.WithSocketPaths(socketPaths),
 		cctx.WithGlobalDebug(cmd.Bool("debug-global")),
 	)
@@ -141,7 +152,7 @@ loop:
 			break loop
 		case <-sighupCh:
 			zap.L().Info("got signal to reload configuration")
-			if lerr := loadConfig(cmd.String("config"), tm); lerr != nil {
+			if lerr := loadConfig(cmd.String("config"), tm, dec); lerr != nil {
 				zap.L().Error("failed to reload configuration", zap.Error(lerr))
 				continue
 			}

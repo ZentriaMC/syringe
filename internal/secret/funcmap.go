@@ -19,6 +19,7 @@ func funcMap(ctx context.Context, opts *TemplateOptions) (fm template.FuncMap) {
 		"unitname":       t.unitName,
 		"credentialname": t.credentialName,
 		"file":           t.readFile,
+		"age":            t.ageDecrypt,
 		"vault_read":     t.readVault,
 
 		"b64decode": b64decode,

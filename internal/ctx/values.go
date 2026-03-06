@@ -9,4 +9,5 @@ var (
 	credentialReqCred contextValue = "ctx:crc"
 	socketPath        contextValue = "ctx:sp"
 	globalDebug       contextValue = "ctx:gd"
+	ageDecryptor      contextValue = "ctx:age"
 )

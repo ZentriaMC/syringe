@@ -3,6 +3,7 @@ package ctx
 import (
 	"context"
 
+	syrage "github.com/ZentriaMC/syringe/internal/age"
 	"github.com/ZentriaMC/syringe/internal/templatemap"
 	vaultapi "github.com/hashicorp/vault/api"
 )
@@ -79,5 +80,16 @@ func WithGlobalDebug(gd bool) ContextValueFunc {
 
 func GlobalDebug(ctx context.Context) bool {
 	v, _ := ctx.Value(globalDebug).(bool)
+	return v
+}
+
+func WithAgeDecryptor(d *syrage.Decryptor) ContextValueFunc {
+	return func(ctx context.Context) context.Context {
+		return context.WithValue(ctx, ageDecryptor, d)
+	}
+}
+
+func AgeDecryptor(ctx context.Context) *syrage.Decryptor {
+	v, _ := ctx.Value(ageDecryptor).(*syrage.Decryptor)
 	return v
 }

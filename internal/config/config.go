@@ -22,7 +22,12 @@ func LoadConfig(filename string) (c *Config, err error) {
 }
 
 type Config struct {
+	Age       *AgeConfig `yaml:"age"`
 	Templates []Template `yaml:"templates"`
+}
+
+type AgeConfig struct {
+	Identities []string `yaml:"identities"`
 }
 
 type Template struct {

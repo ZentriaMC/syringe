@@ -1,16 +1,16 @@
 package secret
 
 import (
+	"bytes"
 	"context"
 	"crypto/md5"
-	"os"
 	"crypto/sha1"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -163,6 +163,43 @@ func (t *templateFn) readFile(path string) (contents string, err error) {
 		}
 
 		v = string(readBytes)
+		return
+	})
+	if err != nil {
+		return
+	}
+
+	contents = ccontents.(string)
+	return
+}
+
+func (t *templateFn) ageDecrypt(path string) (contents string, err error) {
+	if err = t.inSandbox(path); err != nil {
+		return
+	}
+
+	decryptor := cctx.AgeDecryptor(t.ctx)
+	if decryptor == nil {
+		err = fmt.Errorf("age decryption not configured")
+		return
+	}
+
+	var ccontents any
+	key := fmt.Sprintf("age:%s", path)
+	ccontents, err = t.cache(key, func(key string) (v any, err error) {
+		var encrypted []byte
+		if encrypted, err = os.ReadFile(path); err != nil {
+			err = fmt.Errorf("unable to read '%s': %w", path, err)
+			return
+		}
+
+		var plaintext []byte
+		if plaintext, err = decryptor.Decrypt(bytes.NewReader(encrypted)); err != nil {
+			err = fmt.Errorf("unable to decrypt '%s': %w", path, err)
+			return
+		}
+
+		v = string(plaintext)
 		return
 	})
 	if err != nil {

@@ -10,7 +10,7 @@ buildGoModule {
 
   src = lib.cleanSource ./.;
 
-  vendorHash = "sha256-kCalVW5wAEcO+R149xGxuspDR7iywww2xD9vLFuBkeg=";
+  vendorHash = "sha256-EfTzd3lbCb8Us47mVBJcNjLxzJopdxJDNNInq9Fx7Fc=";
   subPackages = [ "cmd/syringe" "cmd/syringe-update" ];
   ldflags = [
     "-s"
