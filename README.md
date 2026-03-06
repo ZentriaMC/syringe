@@ -6,12 +6,13 @@ Syringe renders Go templates and serves the output over a Unix socket. When a sy
 
 ## Features
 
-- **Template-based credentials** — Go templates with built-in functions for files, Vault secrets, [Sprig][sprig], [sockaddr][sockaddr], hashing, base64, and more
+- **Template-based credentials** — Go templates with built-in functions for files, Vault secrets, age decryption, [Sprig][sprig], [sockaddr][sockaddr], hashing, base64, and more
 - **HashiCorp Vault integration** — read secrets from Vault and render them into credentials
+- **age decryption** — decrypt [age][age]-encrypted files using SSH host ed25519 keys or native age identities
 - **File-based credentials** — read from local files with path sandboxing
 - **Configuration reload** — SIGHUP reloads the config without restarting; also exposed as a D-Bus method (`ee.zentria.syringe1.Syringe.Reload`)
-- **Credential update** — `syringe update` re-fetches credentials for a running service via mount namespace jumping (used as `ExecReload=`), working around [systemd/systemd#21099][systemd-issue-21099]
-- **D-Bus service** — exposes `GetSocketPaths` and `Reload` methods on the system bus
+- **Credential update** — `syringe-update` re-fetches credentials for a running service via mount namespace jumping (used as `ExecReload=`), working around [systemd/systemd#21099][systemd-issue-21099]
+- **D-Bus service** — exposes `GetSocketPaths`, `GetGlobalDebug`, and `Reload` methods on the system bus
 - **systemd socket activation** — can be started on-demand via `syringe.socket`
 
 ## Configuration
@@ -19,12 +20,18 @@ Syringe renders Go templates and serves the output over a Unix socket. When a sy
 Syringe uses a YAML configuration file (default: `/etc/syringe/config.yml`):
 
 ```yaml
+age:
+  identities:
+    - /etc/ssh/ssh_host_ed25519_key
+
 templates:
   - unit: "myapp.service"
     credential:
       - "db-password"
+    options:
+      sandbox_path: "/etc/syringe/secrets"
     contents: |
-      {{ (vault_read "secret/data/myapp").Data.data.db_password }}
+      {{ (age "/etc/syringe/secrets/app.json.age" | sprig_fromJson).db_password }}
 
   - unit: "myapp.service"
     credential:
@@ -47,6 +54,7 @@ templates:
 | `unitname` | Requesting unit name |
 | `credentialname` | Requested credential name |
 | `file "<path>"` | Read a file (subject to `sandbox_path`) |
+| `age "<path>"` | Decrypt an [age][age]-encrypted file (subject to `sandbox_path`) |
 | `vault_read "<path>"` | Read a Vault secret |
 | `b64encode` / `b64decode` | Base64 encoding/decoding |
 | `sha256sum` / `sha1sum` / `md5sum` | Hash functions |
@@ -72,7 +80,7 @@ syringe server --config /etc/syringe/config.yml
 syringe request --socket /run/syringe/syringe.sock --unit myapp.service --credential db-password
 
 # Update credentials for the calling service (used as ExecReload=)
-syringe update
+syringe-update
 ```
 
 ## Deployment
@@ -109,24 +117,26 @@ ExecStart=/usr/bin/syringe server
 # D-Bus activation service — see dbus/ directory for the full file
 ```
 
-On Red Hat derived SELinux-enabled systems, the binary needs the `initrc_exec_t` label for `LoadCredential` socket access:
+On Red Hat derived SELinux-enabled systems, the binaries need the `initrc_exec_t` label for `LoadCredential` socket access:
 
 ```bash
-chcon -t initrc_exec_t /usr/bin/syringe
+chcon -t initrc_exec_t /usr/bin/syringe /usr/bin/syringe-update
 ```
 
 ## Credential reloading
 
-For services that need updated credentials without a full restart, use `syringe update` as `ExecReload=`. `syringe update` first re-fetches credentials, then execs into any remaining arguments — allowing you to chain the service's own reload command:
+For services that need updated credentials without a full restart, use `syringe-update` as `ExecReload=`. It first re-fetches credentials, then execs into any trailing arguments — allowing you to chain the service's own reload command:
 
 ```ini
 [Service]
 LoadCredential=tls-cert:/run/syringe/syringe.sock
 LoadCredential=tls-key:/run/syringe/syringe.sock
-ExecReload=/usr/bin/syringe update nginx -s reload
+ExecReload=/usr/bin/syringe-update nginx -s reload
 ```
 
 Running `systemctl reload nginx.service` will re-fetch the TLS cert and key from syringe, atomically replace them in the service's credentials directory, then exec `nginx -s reload` so nginx picks up the new files. This works by jumping into the service's mount namespace, remounting the credentials directory read-write, and performing the update.
+
+`syringe-update` is a separate SUID binary so the main `syringe` server does not need elevated permissions.
 
 Note: this is a best-effort workaround for [systemd/systemd#21099][systemd-issue-21099]. systemd v260+ will include [`RefreshOnReload=`][systemd-pr-40093] as a native solution.
 
@@ -134,7 +144,7 @@ Note: this is a best-effort workaround for [systemd/systemd#21099][systemd-issue
 
 - The credential socket is `root:root` mode `0600` — only root (systemd) can connect
 - D-Bus method calls are restricted: `Reload` is root-only, `GetSocketPaths` is available to all users
-- `syringe update` requires SUID/SGID for credential reloading of non-root services — **no audit has been done, use at your own risk**
+- `syringe-update` is a separate SUID/SGID binary for credential reloading — **no audit has been done, use at your own risk**
 - File reads are sandboxed via `sandbox_path` per template
 
 ## See also
@@ -148,5 +158,6 @@ Note: this is a best-effort workaround for [systemd/systemd#21099][systemd-issue
 [systemd-issue-21099]: https://github.com/systemd/systemd/issues/21099
 [systemd-pr-17510]: https://github.com/systemd/systemd/pull/17510
 [systemd-pr-40093]: https://github.com/systemd/systemd/pull/40093
+[age]: https://age-encryption.org/
 [sprig]: https://masterminds.github.io/sprig/
 [sockaddr]: https://pkg.go.dev/github.com/hashicorp/go-sockaddr/template
