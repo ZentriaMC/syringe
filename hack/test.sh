@@ -93,6 +93,7 @@ if [ "${use_snapshot}" = "false" ]; then
         -P "${ssh_port}" -i "${ssh_key}" \
         "${syringe_bin}" core@127.0.0.1:/tmp/syringe
     fh_ssh -- "sudo install -m 755 /tmp/syringe /usr/local/bin/syringe && rm /tmp/syringe"
+    fh_ssh -- "sudo chcon -t initrc_exec_t /usr/local/bin/syringe"
 
     echo ">>> Reloading D-Bus and systemd..."
     fh_ssh -- "sudo systemctl reload dbus"
