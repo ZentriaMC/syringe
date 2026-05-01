@@ -11,7 +11,7 @@ require (
 	github.com/hashicorp/go-sockaddr v1.0.7
 	github.com/hashicorp/vault/api v1.22.0
 	github.com/urfave/cli/v3 v3.7.0
-	go.uber.org/zap v1.27.1
+	go.uber.org/zap v1.28.0
 	golang.org/x/crypto v0.48.0
 	golang.org/x/sys v0.41.0
 	gopkg.in/yaml.v3 v3.0.1
